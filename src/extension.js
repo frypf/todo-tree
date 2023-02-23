@@ -147,13 +147,13 @@ function activate( context )
         }
 
         searchResults.addToTree( provider );
+        provider.comboFilter( currentFilter );
 
         if( interrupted === false )
         {
             updateInformation();
         }
 
-        provider.filter( currentFilter );
         refreshTree();
     }
 
@@ -932,6 +932,7 @@ function activate( context )
         context.workspaceState.update( 'currentFilter', undefined );
         provider.clearTreeFilter();
         refreshTree();
+        updateInformation();
     }
 
     function addTag( tag )
@@ -1292,18 +1293,45 @@ function activate( context )
             vscode.env.openExternal( vscode.Uri.parse( url ) );
         } ) );
 
-        context.subscriptions.push( vscode.commands.registerCommand( 'todo-tree.filter', function()
+        context.subscriptions.push( vscode.commands.registerCommand( 'todo-tree.filter', function( argTerms )
         {
-            vscode.window.showInputBox( { prompt: "Filter tree" } ).then(
-                function( term )
+            Promise.resolve( argTerms?.length > 0
+                ? argTerms
+                : vscode.window.showInputBox( { prompt: "Input regex to filter tree by text content" } ) ).then(
+                function( terms )
                 {
-                    currentFilter = term;
+                    terms = terms instanceof Array ? terms.join('|') : terms;
+                    currentFilter = terms;
                     if( currentFilter )
                     {
                         context.workspaceState.update( 'filtered', true );
                         context.workspaceState.update( 'currentFilter', currentFilter );
-                        provider.filter( currentFilter );
+                        provider.comboFilter( currentFilter );
                         refreshTree();
+                        updateInformation();
+                    }
+                } );
+        } ) );
+
+        context.subscriptions.push( vscode.commands.registerCommand( 'todo-tree.filterTags', function( argTerms )
+        {
+            Promise.resolve( argTerms?.length > 0
+                ? argTerms
+                : vscode.window.showInputBox( { prompt: "Input \"|\"-separated list to filter tree tags / tagGroups" } ) ).then(
+                function( terms )
+                {
+                    var tagsFromTerms = terms instanceof Array ? terms : terms.split('|');
+                    var tagGroups = vscode.workspace.getConfiguration( 'todo-tree.general' ).tagGroups;
+                    var tagList = tagsFromTerms.map( s => [s, tagGroups[s]] ).flat( Infinity ).filter( s => s !== undefined );
+
+                    currentFilter = tagList;
+                    if( currentFilter )
+                    {        
+                        context.workspaceState.update( 'filtered', true );
+                        context.workspaceState.update( 'currentFilter', currentFilter );
+                        provider.comboFilter( currentFilter );
+                        refreshTree();
+                        updateInformation();
                     }
                 } );
         } ) );
@@ -1923,6 +1951,8 @@ function activate( context )
     
         if( vscode.workspace.getConfiguration( 'todo-tree.tree' ).scanAtStartup === true )
         {
+            clearTreeFilter();
+            
             rebuild();
 
             var editors = vscode.window.visibleTextEditors;

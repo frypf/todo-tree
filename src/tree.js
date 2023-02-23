@@ -9,7 +9,7 @@ var config = require( './config.js' );
 
 var workspaceFolders;
 var nodes = [];
-var currentFilter;
+var currentFilterStringRep;
 
 const PATH = "path";
 const TODO = "todo";
@@ -479,9 +479,9 @@ class TreeNodeProvider
             var totalFilters = includeGlobs.length + excludeGlobs.length;
             var tooltip = "";
 
-            if( currentFilter )
+            if( currentFilterStringRep )
             {
-                tooltip += "Tree Filter: \"" + currentFilter + "\"\n";
+                tooltip += "Tree Filter " + currentFilterStringRep + "\n";
                 totalFilters++;
             }
 
@@ -499,18 +499,19 @@ class TreeNodeProvider
 
             if( totalFilters > 0 )
             {
-                filterStatusNode.label = totalFilters + " filter" + ( totalFilters === 1 ? '' : 's' ) + " active";
+                filterStatusNode.label = "Active filter " + currentFilterStringRep;
                 filterStatusNode.tooltip = tooltip + "\nRight click for filter options";
-                filterStatusNode.icon = "filter";
+                filterStatusNode.icon = "filter-filled";
             }
 
             if( result.length === 0 )
             {
+                var label = "NOTHING FOUND";
                 if( filterStatusNode.label !== "" )
                 {
-                    filterStatusNode.label += ", ";
+                    label += " — ";
                 }
-                filterStatusNode.label += "Nothing found";
+                filterStatusNode.label = label + filterStatusNode.label;
                 filterStatusNode.icon = "issues";
 
                 filterStatusNode.empty = availableNodes.length === 0;
@@ -798,13 +799,100 @@ class TreeNodeProvider
         this._onDidChangeTreeData.fire();
     }
 
-    filter( text, children )
+    comboFilter( term, children, callbackSetVisible = () => { },  )
     {
+        if( !term ) return;
+
+        if( children === undefined )
+        {
+            if( !(term instanceof Array) )
+            {
+                var matcher = new RegExp( term, config.showFilterCaseSensitive() ? "" : "i" );
+                currentFilterStringRep = "(text): " + matcher.toString();
+                callbackSetVisible = ( child ) =>
+                {
+                    if( child.type === TODO )
+                    {
+                        child.visible = !term || matcher.test( child.after );
+                    }
+                }
+            }
+            else
+            {
+                currentFilterStringRep = "(tags): [" + term.map( t => "\"" + t + "\"" ).join( ", " ) + "]";
+                callbackSetVisible = ( child ) =>
+                {
+                    if( child.type === TODO || child.isRootTagNode )
+                    {
+                        child.visible = term.length === 0 || term.includes( child.actualTag ) || term.includes( child.tag );
+                    }        
+                }
+            }
+            children = nodes;
+        }
+        children.forEach( child =>
+        {
+            callbackSetVisible(child);
+
+            if( child.nodes !== undefined )
+            {
+                this.comboFilter( term, child.nodes, callbackSetVisible );
+            }
+            if( child.extraLines !== undefined )
+            {
+                this.comboFilter( term, child.extraLines, callbackSetVisible );
+            }
+            if( ( child.nodes && child.nodes.length > 0 ) || ( child.extraLines && child.extraLines.length > 0 ) )
+            {
+                var visibleNodes = child.nodes ? child.nodes.filter( isVisible ).length : 0;
+                var visibleExtraLines = child.extraLines ? child.extraLines.filter( isVisible ).length : 0;
+                child.visible = visibleNodes + visibleExtraLines > 0;
+            }
+        } );    
+    }
+
+    filterTags( tags, children )
+    {
+        if( !(tags instanceof Array) ) return;
+
+        if( children === undefined )
+        {
+            currentFilterStringRep = "(tags): [" + tags.map( t => "\"" + t + "\"" ).join( ", " ) + "]";
+            children = nodes;
+        }
+        children.forEach( child =>
+        {
+            if( child.type === TODO || child.isRootTagNode )
+            {
+                child.visible = tags.length === 0 || tags.includes( child.actualTag ) || tags.includes( child.tag );
+            }
+
+            if( child.extraLines !== undefined )
+            {
+                this.filterTags( tags, child.extraLines );
+            }    
+            if( child.nodes !== undefined )
+            {
+                this.filterTags( tags, child.nodes );
+            }
+            if( ( child.nodes && child.nodes.length > 0 ) || ( child.extraLines && child.extraLines.length > 0 ) )
+            {
+                var visibleNodes = child.nodes ? child.nodes.filter( isVisible ).length : 0;
+                var visibleExtraLines = child.extraLines ? child.extraLines.filter( isVisible ).length : 0;
+                child.visible = visibleNodes + visibleExtraLines > 0;
+            }
+        } );
+    }
+
+    filterText( text, children )
+    {
+        if( typeof text !== 'string' ) return;
+
         var matcher = new RegExp( text, config.showFilterCaseSensitive() ? "" : "i" );
 
         if( children === undefined )
         {
-            currentFilter = text;
+            currentFilterStringRep = "(text): " + matcher.toString();
             children = nodes;
         }
         children.forEach( child =>
@@ -817,11 +905,11 @@ class TreeNodeProvider
 
             if( child.nodes !== undefined )
             {
-                this.filter( text, child.nodes );
+                this.filterText( text, child.nodes );
             }
             if( child.extraLines !== undefined )
             {
-                this.filter( text, child.extraLines );
+                this.filterText( text, child.extraLines );
             }
             if( ( child.nodes && child.nodes.length > 0 ) || ( child.extraLines && child.extraLines.length > 0 ) )
             {
@@ -834,7 +922,7 @@ class TreeNodeProvider
 
     clearTreeFilter( children )
     {
-        currentFilter = undefined;
+        currentFilterStringRep = undefined;
 
         if( children === undefined )
         {
