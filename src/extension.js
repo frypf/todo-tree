@@ -48,6 +48,13 @@ var NEVER_SHOW_AGAIN_BUTTON = "Never Show This Again";
 var OPEN_SETTINGS_BUTTON = "Open Settings";
 var OK_BUTTON = "OK";
 
+var STATUS_BAR_ICONS = {
+    [SCAN_MODE_OPEN_FILES]: "$(files)",
+    [SCAN_MODE_WORKSPACE_AND_OPEN_FILES]: "$(folder-active)",
+    [SCAN_MODE_WORKSPACE_ONLY]: "$(folder)",
+    [SCAN_MODE_CURRENT_FILE]: "$(symbol-file)",
+};
+
 function activate( context )
 {
     var outputChannel;
@@ -266,13 +273,18 @@ function activate( context )
         }
 
         var scanMode = config.scanMode();
-        if( scanMode === SCAN_MODE_OPEN_FILES )
+        var actualStatusBarScope = statusBar !== STATUS_BAR_CURRENT_FILE ? scanMode : SCAN_MODE_CURRENT_FILE;
+        var showIcons = config.shouldShowIconsInsteadOfTagsInStatusBar();
+        
+        statusBarIndicator.text = showIcons
+            ? `${STATUS_BAR_ICONS[actualStatusBarScope]}:  ${statusBarIndicator.text}`
+            : `${statusBarIndicator.text} (${actualStatusBarScope})`;
+
+        if( currentFilter )
         {
-            statusBarIndicator.text += " (in open files)";
-        }
-        else if( scanMode === SCAN_MODE_CURRENT_FILE )
-        {
-            statusBarIndicator.text += " (in current file)";
+            statusBarIndicator.text = config.shouldShowIconsInsteadOfTagsInStatusBar()
+                ? `$(filter-filled) ${statusBarIndicator.text}`
+                : statusBarIndicator.text + " $(filter-filled)"
         }
 
         statusBarIndicator.command = "todo-tree.onStatusBarClicked";
