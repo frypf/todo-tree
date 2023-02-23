@@ -1196,7 +1196,8 @@ function activate( context )
             {
                 if( todoTreeView.visible === true )
                 {
-                    todoTreeView.reveal( element, { focus: false, select: true } );
+                    todoTreeView.reveal( element, { focus: false, select: true } )
+                        .then( undefined, debug )
                 }
             } );
         }
