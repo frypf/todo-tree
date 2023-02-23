@@ -620,14 +620,14 @@ function activate( context )
             .then( addResultsToTree );
     }
 
-            function triggerRescan()
-            {
-                clearTimeout( refreshTimeout );
-                refreshTimeout = setTimeout( function()
-                {
-                    rebuild();
-                }, 1000 );
-            }
+    function triggerRescan()
+    {
+        clearTimeout( refreshTimeout );
+        refreshTimeout = setTimeout( function()
+        {
+            rebuild();
+        }, 1000 );
+    }
 
     function resetGitWatcher()
     {
@@ -871,6 +871,15 @@ function activate( context )
 
         addResultsToTree();
     }
+
+    function refreshNonWorkspaceFileForStatusBar( document )
+    {
+        if( config.scanMode() === SCAN_MODE_WORKSPACE_ONLY && vscode.workspace.getConfiguration( 'todo-tree.general' ).statusBar === STATUS_BAR_CURRENT_FILE )
+        {
+            var workspaceFolders = vscode.workspace.workspaceFolders.map( d => d.uri.fsPath ).flat( Infinity );
+            workspaceFolders.some( path => document.uri.fsPath.startsWith( path ) ) || refreshFile( document );
+        }
+    };
 
     function refresh()
     {
@@ -1776,7 +1785,7 @@ function activate( context )
 
             delete openDocuments[ document.uri.toString() ];
 
-            if( vscode.workspace.getConfiguration( 'todo-tree.tree' ).autoRefresh === true && config.scanMode() !== SCAN_MODE_WORKSPACE_ONLY )
+            if( shouldRefreshFile() )
             {
                 if( config.isValidScheme( document.uri ) )
                 {
@@ -1909,6 +1918,8 @@ function activate( context )
         resetGitWatcher();
         resetPeriodicRefresh();
 
+        context.subscriptions.push( vscode.window.onDidChangeActiveTextEditor( ( e ) => refreshNonWorkspaceFileForStatusBar( e.document ) ) );
+    
         if( vscode.workspace.getConfiguration( 'todo-tree.tree' ).scanAtStartup === true )
         {
             rebuild();
@@ -1922,6 +1933,8 @@ function activate( context )
                 }
                 refreshOpenFiles();
             } );
+
+            refreshNonWorkspaceFileForStatusBar( vscode.window.activeTextEditor.document );
 
             if( vscode.window.activeTextEditor )
             {
