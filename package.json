@@ -345,7 +345,7 @@
                 "command": "todo-tree.filterClear",
                 "title": "%todo-tree.command.filterClear.title%",
                 "category": "%todo-tree.command.category%",
-                "icon": "$(clear-all)"
+                "icon": "$(filter-filled)"
             },
             {
                 "command": "todo-tree.groupByTag",
@@ -1034,6 +1034,11 @@
                     "todo-tree.tree.showCurrentScanMode": {
                         "default": true,
                         "markdownDescription": "%todo-tree.configuration.tree.showCurrentScanMode.markdownDescription%",
+                        "type": "boolean"
+                    },
+                    "todo-tree.tree.showActiveFilters": {
+                        "default": true,
+                        "markdownDescription": "%todo-tree.configuration.tree.showActiveFilters.markdownDescription%",
                         "type": "boolean"
                     },
                     "todo-tree.tree.showScanOpenFilesOrWorkspaceButton": {

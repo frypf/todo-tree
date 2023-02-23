@@ -218,6 +218,11 @@ function shouldShowScanModeInTree()
     return vscode.workspace.getConfiguration( 'todo-tree.tree' ).showCurrentScanMode;
 }
 
+function shouldShowActiveFiltersInTree()
+{
+    return vscode.workspace.getConfiguration( 'todo-tree.tree' ).showActiveFilters;
+}
+
 function shouldUseColourScheme()
 {
     return vscode.workspace.getConfiguration( 'todo-tree.highlights' ).useColourScheme;
@@ -291,6 +296,7 @@ module.exports.shouldHideFromActivityBar = shouldHideFromActivityBar;
 module.exports.shouldSortTree = shouldSortTree;
 module.exports.scanMode = scanMode;
 module.exports.shouldShowScanModeInTree = shouldShowScanModeInTree;
+module.exports.shouldShowActiveFiltersInTree = shouldShowActiveFiltersInTree;
 module.exports.shouldUseColourScheme = shouldUseColourScheme;
 module.exports.foregroundColourScheme = foregroundColourScheme;
 module.exports.backgroundColourScheme = backgroundColourScheme;

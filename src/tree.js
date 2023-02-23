@@ -516,7 +516,7 @@ class TreeNodeProvider
                 filterStatusNode.empty = availableNodes.length === 0;
             }
 
-            if( filterStatusNode.label !== "" )
+            if( filterStatusNode.icon == "issues" || ( filterStatusNode.label !== "" && config.shouldShowActiveFiltersInTree() ) )
             {
                 result.unshift( filterStatusNode );
             }

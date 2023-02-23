@@ -102,6 +102,7 @@
     "todo-tree.configuration.tree.showCountsInTree.markdownDescription": "在树状图中显示待办事项的数目。",
     "todo-tree.configuration.tree.showInExplorer.deprecationMessage": "该设置不再使用，请拖动视图来进行移动。",
     "todo-tree.configuration.tree.showCurrentScanMode.markdownDescription": "在侧边栏顶部显示当前的扫描模式。",
+    "todo-tree.configuration.tree.showActiveFilters.markdownDescription": "在侧边栏的顶部显示活动过滤器。",
     "todo-tree.configuration.tree.showScanOpenFilesOrWorkspaceButton.deprecationMessage": "该设置不再使用，请使用 \"todo-tree.tree.scanMode\" 替代。",
     "todo-tree.configuration.tree.deprecationMessage.markdownDescription": "该设置不再使用，请使用 \"todo-tree.tree.scanMode\" 替代。",
     "todo-tree.configuration.tree.sortTagsOnlyViewAlphabetically.markdownDescription": "在仅显示标签视图中，待办事项按字母排序。若不选择此项，则待办事项按所在文件和行号排序。",
