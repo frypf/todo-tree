@@ -874,7 +874,7 @@ function activate( context )
 
     function refreshNonWorkspaceFileForStatusBar( document )
     {
-        if( config.scanMode() === SCAN_MODE_WORKSPACE_ONLY && vscode.workspace.getConfiguration( 'todo-tree.general' ).statusBar === STATUS_BAR_CURRENT_FILE )
+        if( document && config.scanMode() === SCAN_MODE_WORKSPACE_ONLY && vscode.workspace.getConfiguration( 'todo-tree.general' ).statusBar === STATUS_BAR_CURRENT_FILE )
         {
             var workspaceFolders = vscode.workspace.workspaceFolders.map( d => d.uri.fsPath ).flat( Infinity );
             workspaceFolders.some( path => document.uri.fsPath.startsWith( path ) ) || refreshFile( document );
@@ -1947,7 +1947,7 @@ function activate( context )
         resetGitWatcher();
         resetPeriodicRefresh();
 
-        context.subscriptions.push( vscode.window.onDidChangeActiveTextEditor( ( e ) => refreshNonWorkspaceFileForStatusBar( e.document ) ) );
+        context.subscriptions.push( vscode.window.onDidChangeActiveTextEditor( ( e ) => refreshNonWorkspaceFileForStatusBar( e?.document ) ) );
     
         if( vscode.workspace.getConfiguration( 'todo-tree.tree' ).scanAtStartup === true )
         {
@@ -1965,7 +1965,7 @@ function activate( context )
                 refreshOpenFiles();
             } );
 
-            refreshNonWorkspaceFileForStatusBar( vscode.window.activeTextEditor.document );
+            refreshNonWorkspaceFileForStatusBar( vscode.window.activeTextEditor?.document );
 
             if( vscode.window.activeTextEditor )
             {
